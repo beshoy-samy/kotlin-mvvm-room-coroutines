@@ -28,18 +28,23 @@ interface SleepDatabaseDao {
     @Insert
     fun insert(night: SleepNight)
 
+    //typical update didn't work because that the object I am holding doesn't have
+    // the same id probably 0 which is auto generating by SQL
     @Update
     fun update(night: SleepNight)
 
+    @Query("UPDATE daily_sleep_quality_table SET end_time_milli= :endTimeMilli WHERE start_time_milli= :startTimeMilli")
+    fun updateSleepEndTime(startTimeMilli: Long, endTimeMilli: Long)
+
     @Query("SELECT * FROM daily_sleep_quality_table WHERE nightId = :key")
-    fun get(key: Long) : SleepNight?
+    fun get(key: Long): SleepNight?
 
     @Query("DELETE FROM daily_sleep_quality_table")
     fun clear()
 
     @Query("SELECT * FROM daily_sleep_quality_table ORDER BY nightId DESC")
-    fun getAllNights() : LiveData<List<SleepNight>>
+    fun getAllNights(): LiveData<List<SleepNight>>
 
     @Query("SELECT * FROM daily_sleep_quality_table ORDER BY nightId DESC LIMIT 1")
-    fun getTonight() : SleepNight?
+    fun getTonight(): SleepNight?
 }
