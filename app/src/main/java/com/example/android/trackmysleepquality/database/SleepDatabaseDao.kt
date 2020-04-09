@@ -26,13 +26,13 @@ import androidx.room.Update
 interface SleepDatabaseDao {
 
     @Insert
-    fun insert(night: SleepNight)
+    fun insert(night: SleepNight) : Long
 
-    //typical update didn't work because that the object I am holding doesn't have
-    // the same id probably 0 which is auto generating by SQL
     @Update
     fun update(night: SleepNight)
-
+    //typical update didn't work because that the object I am holding doesn't have
+    // the same id probably 0 which is auto generating by SQL
+    // I fixed this by making insert returns the new ID
     @Query("UPDATE daily_sleep_quality_table SET end_time_milli= :endTimeMilli WHERE start_time_milli= :startTimeMilli")
     fun updateSleepEndTime(startTimeMilli: Long, endTimeMilli: Long)
 

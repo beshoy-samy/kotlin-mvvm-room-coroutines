@@ -18,6 +18,7 @@ package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
@@ -37,9 +38,17 @@ class SleepTrackerViewModel(
     private var tonight = MutableLiveData<SleepNight>()
     private val allNights = database.getAllNights()
 
+    private val _navigationSleepNightQuality = MutableLiveData<SleepNight>()
+    val navigationSleepNightQuality: LiveData<SleepNight>
+        get() = _navigationSleepNightQuality
+
     val nightsData = Transformations.map(allNights) { nights ->
         formatNights(nights, application.resources)
     }
+
+    val startBtnVisible = Transformations.map(tonight) { it == null }
+    val stopBtnVisible = Transformations.map(tonight) { it != null }
+    val clearBtnVisible = Transformations.map(allNights) { it?.isNotEmpty() }
 
     init {
         initializeTonight()
@@ -62,14 +71,14 @@ class SleepTrackerViewModel(
     fun onStartTrack() {
         uiScope.launch {
             val newNight = SleepNight()
-            insert(newNight)
+            newNight.nightId = insert(newNight)
             tonight.value = newNight
         }
     }
 
-    private suspend fun insert(newNight: SleepNight) {
-        withContext(Dispatchers.IO) {
-            database.insert(newNight)
+    private suspend fun insert(newNight: SleepNight): Long {
+        return withContext(Dispatchers.IO) {
+            return@withContext database.insert(newNight)
         }
     }
 
@@ -78,12 +87,17 @@ class SleepTrackerViewModel(
             val oldNight = tonight.value ?: return@launch
             oldNight.endTimeMilli = System.currentTimeMillis()
             update(oldNight)
+            _navigationSleepNightQuality.value = oldNight
         }
+    }
+
+    fun onSleepQualityNavigationDone() {
+        _navigationSleepNightQuality.value = null
     }
 
     private suspend fun update(oldNight: SleepNight) {
         withContext(Dispatchers.IO) {
-            database.updateSleepEndTime(oldNight.startTimeMilli, oldNight.endTimeMilli)
+            database.update(oldNight)
         }
     }
 
@@ -106,4 +120,3 @@ class SleepTrackerViewModel(
     }
 
 }
-
