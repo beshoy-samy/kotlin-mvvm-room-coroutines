@@ -42,6 +42,10 @@ interface SleepDatabaseDao {
     @Query("DELETE FROM daily_sleep_quality_table")
     fun clear()
 
+    /*
+        by default when room returns type LiveData it will run the query on the background thread
+        for you and update any changes that happens to the database
+     */
     @Query("SELECT * FROM daily_sleep_quality_table ORDER BY nightId DESC")
     fun getAllNights(): LiveData<List<SleepNight>>
 
